@@ -142,3 +142,31 @@ For (2), the data can be stored in a **heap file**.
 
 A compromise between (1) and (2) is to use a **covering index** (aka **index with included columns**). Some table columns are included in the index while others are stored in the heap file. Covering indexes can speed up reads but will slow down writes.
 
+## Other Indexing Structures
+
+### Secondary Indexes
+Secondary indexes are additional indexes **without** a uniqueness guarantee that are used to  support efficient joins. For example, a user_id column to allow retrieval of all rows relevant to a unique user.
+
+### Index Value Storage
+Indexes are the keys that queries search for. Their values can either be (1) a reference to the row (stored elsewhere) or (2) the row of data they correspond to.
+
+#### Reference Approach (Nonclustered Index)
+The reference approach stores row data in an unordered **heap file** and indexes reference the heap file location. Heap files can be append-only or with deleted row tracking to support overwriting deleted row locations with new rows later.
+
+**Advantages**
+- Avoids duplicating data when multiple secondary indexes are present. Each secondary index references the same location in the heap file and the data is kept in the same place.
+- Efficient updates **if** new values are not larger than the old values. 
+
+**Disadvantages**
+- Slower updates **if** new values are larger than old values and exceed the heap space allocated to the old values. Larger new values may require finding a new heap file location with sufficient space. Using a new location requires (1) updating any indexes with references to the old file to reference the new file or (2) leaving a forwarding pointer in the old heap file location.
+- Performance penalty from extra hop from index to heap file location.
+
+#### Direct Storage (Clustered Index)
+The clustered index approach directly stores the indexed row within the index. 
+- MySQL's InnoDB engine treats primary keys as clustered indexes; secondary keys reference the primary keys for data.
+- SQL Server supports specifying one clustered index per table
+
+#### Hybrid (Covering Index)
+Covered indexes are a compromise between nonclustered and clustered indexes. **Some** columns are stored directly within the index while the remaining ones are referenced. Queries that can use the index alone are said to be **covered by the index**.
+
+### Multi-Column Indexes
