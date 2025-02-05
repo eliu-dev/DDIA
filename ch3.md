@@ -170,3 +170,21 @@ The clustered index approach directly stores the indexed row within the index.
 Covered indexes are a compromise between nonclustered and clustered indexes. **Some** columns are stored directly within the index while the remaining ones are referenced. Queries that can use the index alone are said to be **covered by the index**.
 
 ### Multi-Column Indexes
+Mult-column indexes enable efficient queries that depend on filtering across multiple columns simultaneously, such as geospatial data. A common approach is to create a **concatenated index** that combines the values of the relevant columns. Specialized approaches, such as R-trees for geospatial indexes, have been created for specialized domains.
+
+### Fuzzy Indexes
+Fuzzy indexes are used for partial or similar matcheskeys, such as full-text search engines. Lucene uses a SSTable-like structure for a dictionary of similar words
+
+### In-Memory Databases
+In-memory databases, such as VoltDB, MemSQL, and Redis, offer faster performance for lower durability. The performance advantage of in-memory databases interestingly comes from avoiding the need to encode data in a manner that disk-based storage can use.
+
+Some in-memory databases are simple key-value stores (Redis and Memcached) while others are full relational databases (VoltDB and MemSQL).
+
+## Database Use Cases
+The choice of database technologies depends on the processing and data characteristics. Use cases can roughly be split into the following categories:
+
+1. Online Transaction Processing (OLTP): Traditional source of record use case for processing transactions.
+2. Online Analytic Processing (OLAP): Analytics using aggregate statistics over large number of records.
+3. Data Warehouse: A read-only copy of a OLTP that analysts can use for granular queries without impacting the production OLTP.
+4. Data Lake: A centralized repository that holds any data that might be useful for analysis. Data lakes are formed by ETLing data from other sources in a raw format (i.e., data lakes do not impose strict data structures or file types). 
+5. Data Lakehouse: A combination of data lake and data warehouse capabilities. Data lakehouses support queries by adding transaction layer and schema enforcement on top of data lake storage. Data lakehouses can have different zones with different schema enforcement. 
