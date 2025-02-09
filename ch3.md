@@ -187,4 +187,200 @@ The choice of database technologies depends on the processing and data character
 2. Online Analytic Processing (OLAP): Analytics using aggregate statistics over large number of records.
 3. Data Warehouse: A read-only copy of a OLTP that analysts can use for granular queries without impacting the production OLTP.
 4. Data Lake: A centralized repository that holds any data that might be useful for analysis. Data lakes are formed by ETLing data from other sources in a raw format (i.e., data lakes do not impose strict data structures or file types). 
-5. Data Lakehouse: A combination of data lake and data warehouse capabilities. Data lakehouses support queries by adding transaction layer and schema enforcement on top of data lake storage. Data lakehouses can have different zones with different schema enforcement. 
+5. Data Lakehouse: A combination of data lake and data warehouse capabilities. Data lakehouses support queries by adding transaction layer and schema enforcement on top of data lake storage. Data lakehouses can have different zones with different schema enforcement.
+6. Data Marts: A subset of data warehouse data for providin a more tailored and limited set of data to targeted teams.
+
+### Data Warehouse Schemas
+Data warehouse schemas typically fall into the (1) star, (2) snowflake, and (3) galaxy pattern. The primary components are a single **fact table** that contains foreigns keys that reference **dimension tables**. Fact tables typically track events and contain a combination of simple flat data about the event and references to dimension tables for more complex data.
+
+#### Star Pattern
+Star pattern data models have one fact table that references a single layer of dimension tables.
+
+<details>
+<summary>Star data model example</summary>
+
+```mermaid
+flowchart
+    SF["SALES_FACT
+    ------------------
+    sale_id (PK)
+    product_id (FK)
+    customer_id (FK)
+    store_id (FK)
+    time_id (FK)
+    quantity
+    total_amount"]
+
+    PD["PRODUCT_DIM
+    ------------------
+    product_id (PK)
+    product_name
+    category
+    unit_price"]
+
+    CD["CUSTOMER_DIM
+    ------------------
+    customer_id (PK)
+    customer_name
+    email
+    city"]
+
+    SD["STORE_DIM
+    ------------------
+    store_id (PK)
+    store_name
+    region
+    manager"]
+
+    TD["TIME_DIM
+    ------------------
+    time_id (PK)
+    date
+    month
+    quarter
+    year"]
+
+    SF --- PD
+    SF --- CD
+    SF --- SD
+    SF --- TD
+
+    classDef factTable fill:#ffe6cc,stroke:#d79b00
+    classDef dimTable fill:#dae8fc,stroke:#6c8ebf
+    class SF factTable
+    class PD,CD,SD,TD dimTable
+```
+
+</details>
+
+#### Snowflake Pattern
+Snowflake pattern data models follow the star pattern, but dimension tables will reference additional layers of dimension tables.
+
+<details>
+    <summary>Snowflake data model example</summary>
+
+```mermaid
+flowchart
+    SF["SALES_FACT
+    ------------------
+    sale_id (PK)
+    product_id (FK)
+    customer_id (FK)
+    store_id (FK)
+    time_id (FK)
+    quantity
+    total_amount"]
+
+    PD["PRODUCT_DIM
+    ------------------
+    product_id (PK)
+    product_name
+    category
+    unit_price"]
+
+    CD["CUSTOMER_DIM
+    ------------------
+    customer_id (PK)
+    customer_name
+    email
+    city"]
+
+    SD["STORE_DIM
+    ------------------
+    store_id (PK)
+    store_name
+    region
+    manager"]
+
+    TD["TIME_DIM
+    ------------------
+    time_id (PK)
+    date
+    month
+    quarter
+    year"]
+
+    SF --- PD
+    SF --- CD
+    SF --- SD
+    SF --- TD
+
+    classDef factTable fill:#ffe6cc,stroke:#d79b00
+    classDef dimTable fill:#dae8fc,stroke:#6c8ebf
+    class SF factTable
+    class PD,CD,SD,TD dimTable
+```
+
+</details>
+
+#### Galaxy Pattern
+Galaxy pattern data models have multiple fact tables that may reference common or independent dimension tables (e.g., a galaxy with multiple star systems). 
+
+<details>
+<summary>Galaxy data model example</summary>
+
+```mermaid
+flowchart TB
+    SF["SALES_FACT
+    ------------------
+    sale_id (PK)
+    product_id (FK)
+    customer_id (FK)
+    store_id (FK)
+    time_id (FK)
+    quantity
+    total_amount"]
+
+    IF["INVENTORY_FACT
+    ------------------
+    inventory_id (PK)
+    product_id (FK)
+    store_id (FK)
+    time_id (FK)
+    stock_level
+    reorder_point"]
+
+    PD["PRODUCT_DIM
+    ------------------
+    product_id (PK)
+    product_name
+    category
+    unit_price"]
+
+    SD["STORE_DIM
+    ------------------
+    store_id (PK)
+    store_name
+    region
+    manager"]
+
+    TD["TIME_DIM
+    ------------------
+    time_id (PK)
+    date
+    month
+    quarter
+    year"]
+
+    CD["CUSTOMER_DIM
+    ------------------
+    customer_id (PK)
+    customer_name
+    email
+    city"]
+
+    SF --- PD
+    SF --- SD
+    SF --- TD
+    SF --- CD
+    IF --- PD
+    IF --- SD
+    IF --- TD
+
+    classDef factTable fill:#ffe6cc,stroke:#d79b00
+    classDef dimTable fill:#dae8fc,stroke:#6c8ebf
+    class SF,IF factTable
+    class PD,CD,SD,TD dimTable
+```
+
+</details>
