@@ -10,7 +10,7 @@ Technnically, it is possible to mix and match storage engines and the index stra
 
 ## Terminology and Concepts
 - **Page**: a fixed-size block of data (usually 4KB or 8KB) stored on physical disk. Page-oriented storage and page-oriented indexes are based on pages. Log-structured *storage* at the physical level is eventually written at the page size (all data is), but it is called log-structured storage because the data is logically grouped into larger segments in a log file.
-- **Segment**: a larger group of data in log-structured storage (typically in the MB range)that is written to disk at once.
+- **Segment**: a larger group of data in log-structured storage (typically in the MB range) that is written to disk at once.
 - **Storage** is different from the **index**. Storage is the actual data stored on disk while the index is a data structure that maps keys to the corresponding record offsets in the storage engine.
 
 ## Log-Structured Storage
@@ -384,3 +384,26 @@ flowchart TB
 ```
 
 </details>
+
+## Column Oriented Storage
+Column oriented storage focuses on analytic loads by storing the values from a column together. This approach optimizes for analytic loads because those queries typically focus on running statistics that requiring aggregation over a column. In contrast, most traditional transactional tasks focus on modifying a single entry that includes many different columns.
+
+### Storage Process
+Column oriented storage leverages SSTables and the LSM-tree approach. Each SSTable holds one or more columns. When the SSTable is flushed to long-term storage, it is added to the highest level of the LSM-tree. Periodically, the tree is compressed.
+
+### Column Compression
+Column oriented storage is further streamlined through compression. The number of distinct values in a column is typically small compred to the number of rows.
+
+If there are `m` rows with `n` distinct values
+- Each unqiue value maintains a bitmap for whether the value occurs in the row.
+- This results in `n` bitmaps with `m` values.
+- Bitmaps that are mostly zero are referred to as **spare**.
+
+Bitmaps are efficient because they are suited to many filters. For example, finding the how many times a set of values occurs in a column requires can be simply done by combining the different bitmaps with a bitwise OR and counting nonzero entries. Alternatively, finding how frequently one value occurs in one column while another value occurs in a second column involves AND-ing the two columns and counting nonzero entries. This type of bitwise processing is known as **vectorized processing**.
+
+### Writes to Columns
+Column oriented storage cannot be updated in place easily because rows are identified based on their position in a column file and column comprehension means multiple updates are required to reflect a single value update.
+
+For example, inserting a row in the middle of a sorted table means each column file would need to be updated. Separately, updating one value would involve updating multiple bitmaps in a compressed column.
+
+Note: Modern column stores now include an index that maps the primary keys of rows to their positions in the column. 
